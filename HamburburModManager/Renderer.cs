@@ -10,13 +10,14 @@ namespace HamburburModManager;
 
 public class Renderer : Overlay
 {
-    private readonly  Vector4       MainColour   = new(0.1694782f, 0.1504984f, 0.3584906f, 1f);
-    private readonly List<ModInfo> officialMods = [];
+    private readonly Vector4 mainColour      = new(0.1694782f, 0.1504984f, 0.3584906f, 1f);
+    private readonly Vector4 secondaryColour = new(0.03906193f, 0.0252314f, 0.1981132f, 1f);
 
-    private readonly  Vector4                   SecondaryColour = new(0.03906193f, 0.0252314f, 0.1981132f, 1f);
-    private readonly Dictionary<ModInfo, bool> selectedMods    = new();
-    private readonly List<ModInfo>             unofficialMods  = [];
-    private          string                    errorMessage    = "";
+    private readonly Dictionary<ModInfo, bool> selectedMods   = new();
+    private readonly List<ModInfo>             officialMods   = [];
+    private readonly List<ModInfo>             unofficialMods = [];
+    
+    private          string                    errorMessage   = "";
     private          bool                      errorPopupOpen;
     private          string                    gamePath        = "Not Found";
     private          string                    manualPathInput = "";
@@ -33,8 +34,8 @@ public class Renderer : Overlay
         {
             ImGui.SetNextWindowSize(new Vector2(800, 500), ImGuiCond.FirstUseEver);
 
-            ImGui.PushStyleColor(ImGuiCol.TitleBgActive, SecondaryColour);
-            ImGui.PushStyleColor(ImGuiCol.Button,        MainColour);
+            ImGui.PushStyleColor(ImGuiCol.TitleBgActive, secondaryColour);
+            ImGui.PushStyleColor(ImGuiCol.Button,        mainColour);
             ImGui.PushStyleColor(ImGuiCol.FrameBg,       new Vector4(0.1f, 0.1f, 0.1f, 1f));
 
             ImGui.Begin("Hamburbur Mod Manager");
@@ -110,15 +111,16 @@ public class Renderer : Overlay
         if (gamePath == "Not Found")
         {
             gamePath = GameLocator.FindGame();
+            if (gamePath == null) showPathPopup = true;
         }
 
-        if (string.IsNullOrEmpty(gamePath))
-            return;
+        if (!string.IsNullOrEmpty(gamePath))
+        {
+            if (!BepInExManager.HasBepInEx(gamePath))
+                _ = BepInExManager.InstallBepInEx(gamePath);
 
-        if (!BepInExManager.HasBepInEx(gamePath))
-            _ = BepInExManager.InstallBepInEx(gamePath);
-
-        LoadMods().Wait();
+            LoadMods().Wait();
+        }
     }
 
     private void DrawMods()
@@ -274,11 +276,8 @@ public class Renderer : Overlay
 
     private async Task LoadMods()
     {
-        const string baseUrl = "https://raw.githubusercontent.com/ZlothY29IQ/GorillaInfo/refs/heads/main/";
-        
-        const string OfficialUrl = baseUrl + "official.json";
-
-        const string UnofficialUrl = baseUrl + "unofficial.json";
+        const string OfficialUrl = "https://raw.githubusercontent.com/ZlothY29IQ/GorillaInfo/refs/heads/main/official.json";
+        const string UnofficialUrl = "https://raw.githubusercontent.com/ZlothY29IQ/GorillaInfo/refs/heads/main/unofficial.json";
 
         officialMods.Clear();
         unofficialMods.Clear();
